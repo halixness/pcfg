@@ -7,6 +7,16 @@ Description
 A knob-rich fork of [thomasbreydo/pcfg](github.com/thomasbreydo/pcfg). You can instantiate your own [PCFG](https://www.nltk.org/api/nltk.html#nltk.grammar.PCFG) with the added ``generate()`` method to probabilistically generate valid sentences. (NLTK stands for Natural Language Toolkit.)
 The parameters thus are the same as [nltk.parse.generate](https://www.nltk.org/howto/generate.html).
 
+Installation
+-------------
+
+```
+git clone https://github.com/halixness/pcfg
+cd pcfg
+python setup.py install
+
+```
+
 Example usage
 -------------
 

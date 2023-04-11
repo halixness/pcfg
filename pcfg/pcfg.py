@@ -3,69 +3,57 @@ import random
 import nltk  # type: ignore
 from nltk.grammar import ProbabilisticProduction  # type: ignore
 from nltk.grammar import Nonterminal  # type: ignore
+import sys
 
 Symbol = Union[str, Nonterminal]
 
-
 class PCFG(nltk.grammar.PCFG):
-    def generate(self, n: int) -> Iterator[str]:
-        """Probabilistically, recursively reduce the start symbol `n` times,
-        yielding a valid sentence each time.
-
-        Args:
-            n: The number of sentences to generate.
-
-        Yields:
-            The next generated sentence.
+    def generate(self, start=None, depth=None, n=None):
         """
-        for _ in range(n):
-            yield self._generate_derivation(self.start())
+            Generates an iterator of all sentences from a CFG.
 
-    def _generate_derivation(self, nonterminal: Nonterminal) -> str:
-        """Probabilistically, recursively reduce `nonterminal` to generate a
-        derivation of `nonterminal`.
-
-        Args:
-            nonterminal: The non-terminal nonterminal to reduce.
-
-        Returns:
-            The derived sentence.
+            :param grammar: The Grammar used to generate sentences.
+            :param start: The Nonterminal from which to start generate sentences.
+            :param depth: The maximal depth of the generated tree.
+            :param n: The maximum number of sentences to return.
+            :return: An iterator of lists of terminal tokens.
         """
-        sentence: List[str] = []
-        symbol: Symbol
-        derivation: str
-        for symbol in self._reduce_once(nonterminal):
-            if isinstance(symbol, str):
-                derivation = symbol
+        if not start:
+            start = self.start()
+        if depth is None:
+            depth = sys.maxsize
+
+        # Added: since now it's one-branch exploration, iterate it for N sentences
+        if n == None: n = 1
+        for i in range(n):
+            for s in self._generate_all([start], depth): yield s
+
+    def _generate_all(self, items, depth):
+        """
+            Recursive generation for a sequence of RHS symbols
+        """
+        if items:
+            try:
+                for frag1 in self._generate_one(items[0], depth):
+                    for frag2 in self._generate_all(items[1:], depth):
+                        yield frag1 + frag2
+            except RecursionError as error:
+                raise RuntimeError(
+                    "The grammar has rule(s) that yield infinite recursion!"
+                ) from error
+        else:
+            yield []
+
+
+    def _generate_one(self, item, depth):
+        """
+            Symbol resolution with branching factor: 1
+        """
+        if depth > 0:
+            if isinstance(item, Nonterminal):
+                productions = self.productions(lhs=item)
+                # Added: instead of iterating productions equally, randomly sample
+                prod = random.choices(productions, weights=[p.prob() for p in productions])[0]
+                yield from self._generate_all(prod.rhs(), depth - 1)
             else:
-                derivation = self._generate_derivation(symbol)
-            if derivation != "":
-                sentence.append(derivation)
-        return " ".join(sentence)
-
-    def _reduce_once(self, nonterminal: Nonterminal) -> Tuple[Symbol]:
-        """Probabilistically choose a production to reduce `nonterminal`, then
-        return the right-hand side.
-
-        Args:
-            nonterminal: The non-terminal symbol to derive.
-
-        Returns:
-            The right-hand side of the chosen production.
-        """
-        return self._choose_production_reducing(nonterminal).rhs()
-
-    def _choose_production_reducing(
-        self, nonterminal: Nonterminal
-    ) -> ProbabilisticProduction:
-        """Probabilistically choose a production that reduces `nonterminal`.
-
-        Args:
-            nonterminal: The non-terminal symbol for which to choose a production.
-
-        Returns:
-            The chosen production.
-        """
-        productions: List[ProbabilisticProduction] = self._lhs_index[nonterminal]
-        probabilities: List[float] = [production.prob() for production in productions]
-        return random.choices(productions, weights=probabilities)[0]
+                yield [item]

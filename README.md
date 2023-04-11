@@ -1,25 +1,11 @@
 pcfg
 ====
-[![Documentation Status](https://readthedocs.org/projects/pcfg/badge/?version=latest)](https://pcfg.readthedocs.io/en/latest/?badge=latest)
-
 
 Description
 -----------
 
-Implement the ``generate()`` method for NLTK's [probabilistic context-free grammar](https://www.nltk.org/api/nltk.html#nltk.grammar.PCFG) to probabilistically generate valid sentences. (NLTK stands for Natural Language Toolkit.)
-
-Installation
-------------
-
-```zsh
-pip install pcfg
-```
-
-Documentation
--------------
-
-Read the latest documentation for **pcfg** [here](https://pcfg.readthedocs.io/).
-
+A knob-rich fork of [thomasbreydo/pcfg](github.com/thomasbreydo/pcfg). You can instantiate your own [PCFG](https://www.nltk.org/api/nltk.html#nltk.grammar.PCFG) with the added ``generate()`` method to probabilistically generate valid sentences. (NLTK stands for Natural Language Toolkit.)
+The parameters thus are the same as [nltk.parse.generate](https://www.nltk.org/howto/generate.html).
 
 Example usage
 -------------
@@ -38,7 +24,7 @@ Action -> "eats lunch" [0.5] | "was here" [0.5]
 To generate sentences, simply use the ``generate()`` method:
 
 ```python3
->>> for sentence in grammar.generate(3):
+>>> for sentence in grammar.generate(n=3, depth=5, start=Nonterminal("S")):
 ...     print(sentence)
 ```
 
@@ -54,4 +40,4 @@ Of course, your output may be different because the sentences are generated prob
 
 License
 -------
-[MIT](https://github.com/thomasbreydo/pcfg/blob/master/LICENSE)
+[WTFPL](http://www.wtfpl.net)
